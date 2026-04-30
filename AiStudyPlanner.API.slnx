@@ -1,6 +1,6 @@
 <Solution>
+  <Project Path="AiStudyPlanner.API/AiStudyPlanner.API.csproj" />
   <Project Path="AiStudyPlanner.Application/AiStudyPlanner.Application.csproj" Id="574d1ba5-e73a-48e4-96a7-0d8dc14ea776" />
   <Project Path="AiStudyPlanner.Domain/AiStudyPlanner.Domain.csproj" Id="21bde492-298c-412f-b50c-af6acab613e7" />
   <Project Path="AiStudyPlanner.Infrastructure/AiStudyPlanner.Infrastructure.csproj" Id="2f5342c9-bd49-443d-9b4e-64d3e778f886" />
-  <Project Path="AiStudyPlanner/AiStudyPlanner.API.csproj" />
 </Solution>
