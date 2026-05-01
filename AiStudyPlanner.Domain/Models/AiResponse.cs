@@ -1,4 +1,4 @@
-﻿namespace AiStudyPlanner.API.Models
+﻿namespace AiStudyPlanner.Domain.Models
 {
     public class AiResponse
     {
