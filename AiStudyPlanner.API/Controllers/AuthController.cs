@@ -20,13 +20,16 @@ namespace AiStudyPlanner.API.Controllers
         {
             try
             {
-                var token = await _authService.RegisterAsync(request.Username, request.Email, request.Password);
+                await _authService.RegisterAsync(request.Username, request.Email, request.Password);
 
-                return Ok(new { token });
+                return Created(string.Empty, new
+                {
+                    message = "User registered successfully."
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 

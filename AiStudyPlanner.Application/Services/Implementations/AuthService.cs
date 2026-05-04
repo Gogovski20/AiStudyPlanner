@@ -32,7 +32,7 @@ namespace AiStudyPlanner.Application.Services.Implementations
             return GenerateToken(user);
         }
 
-        public async Task<string> RegisterAsync(string username, string email, string password)
+        public async Task RegisterAsync(string username, string email, string password)
         {
             if (await _userRepository.ExistsAsync(email))
             {
@@ -44,12 +44,11 @@ namespace AiStudyPlanner.Application.Services.Implementations
                 UserName = username,
                 Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
-
-            return GenerateToken(user);
         }
 
         private string GenerateToken(User user)
