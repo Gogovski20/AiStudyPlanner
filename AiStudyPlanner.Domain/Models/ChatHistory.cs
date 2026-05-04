@@ -6,7 +6,7 @@
         public int UserId { get; set; }
         public string UserInput { get; set; } = string.Empty;
 
-        public List<string> Tasks { get; set; } = new(); 
+        public List<TaskItem> Tasks { get; set; } = new(); 
         public string EstimatedTime { get; set; } = string.Empty;
         public string Priority { get; set; } = string.Empty;
 

@@ -41,7 +41,7 @@ namespace AiStudyPlanner.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.PrimitiveCollection<string>("Tasks")
+                    b.Property<string>("Tasks")
                         .IsRequired()
                         .HasColumnType("jsonb");
 

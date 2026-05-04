@@ -33,12 +33,21 @@ namespace AiStudyPlanner.Application.Services.Implementations
                 Respond ONLY with valid JSON in this exact format:
 
                 {{
-                  ""tasks"": [""task1"", ""task2"", ""task3""],
+                  ""tasks"": [
+                    {{ ""title"": ""Task 1"", ""isCompleted"": false }},
+                    {{ ""title"": ""Task 2"", ""isCompleted"": false }},
+                    {{ ""title"": ""Task 3"", ""isCompleted"": false }}
+                  ],
                   ""estimatedTime"": ""string"",
                   ""priority"": ""Low | Medium | High""
                 }}
 
-                No explanations. No markdown. No extra text.
+                Rules:
+                - No explanations
+                - No markdown
+                - No extra text
+                - Every task must have title and isCompleted
+                - isCompleted must always be false for new generated tasks
                 ";
 
             var requestBody = new
@@ -129,6 +138,9 @@ namespace AiStudyPlanner.Application.Services.Implementations
 
             if (result == null || result.Tasks == null || !result.Tasks.Any())
                 throw new Exception("Invalid AI response format.");
+
+            if (result.Tasks.Any(t => string.IsNullOrWhiteSpace(t.Title)))
+                throw new Exception("AI returned one or more empty tasks.");
 
             return result;
         }
