@@ -44,6 +44,7 @@ namespace AiStudyPlanner.Application.Services.Implementations
                 UserName = username,
                 Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                Role = "User",
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -61,7 +62,8 @@ namespace AiStudyPlanner.Application.Services.Implementations
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.UserName)
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             var token = new JwtSecurityToken(
