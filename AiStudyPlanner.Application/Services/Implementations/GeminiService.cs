@@ -142,6 +142,14 @@ namespace AiStudyPlanner.Application.Services.Implementations
             if (result.Tasks.Any(t => string.IsNullOrWhiteSpace(t.Title)))
                 throw new Exception("AI returned one or more empty tasks.");
 
+            foreach (var task in result.Tasks)
+            {
+                if (task.Id == Guid.Empty)
+                    task.Id = Guid.NewGuid();
+
+                task.IsCompleted = false;
+            }
+
             return result;
         }
     }

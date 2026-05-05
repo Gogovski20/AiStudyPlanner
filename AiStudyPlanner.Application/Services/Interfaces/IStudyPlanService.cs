@@ -7,7 +7,7 @@ namespace AiStudyPlanner.Application.Services.Interfaces
         Task<ChatHistory> GenerateAndSaveAsync(int userId, string input);
         Task<IEnumerable<ChatHistory>> GetHistoryAsync(int userId);
         Task<ChatHistory?> GetHistoryByIdAsync(int userId, int historyId);
-        Task<ChatHistory?> CompleteTaskAsync(int userId, int historyId, int taskIndex);
-        Task<ChatHistory?> IncompleteTaskAsync(int userId, int historyId, int taskIndex);
+        Task<ChatHistory?> CompleteTaskAsync(int userId, int historyId, Guid taskId);
+        Task<ChatHistory?> IncompleteTaskAsync(int userId, int historyId, Guid taskId);
     }
 }

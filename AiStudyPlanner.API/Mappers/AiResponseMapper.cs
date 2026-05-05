@@ -36,6 +36,7 @@ namespace AiStudyPlanner.API.Mappers
         {
             return new TaskItemResponse
             {
+                Id = task.Id,
                 Title = task.Title,
                 IsCompleted = task.IsCompleted
             };
