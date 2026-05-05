@@ -1,4 +1,4 @@
-﻿using AiStudyPlanner.Application.Repositories;
+﻿using AiStudyPlanner.API.Contracts.Ai;
 using AiStudyPlanner.Application.Services.Interfaces;
 using AiStudyPlanner.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -12,15 +12,11 @@ namespace AiStudyPlanner.API.Controllers
     [ApiController]
     public class AiController : ControllerBase
     {
-        private readonly IAiService _aiService;
-        private readonly IChatHistoryRepository _chatHistoryRepository;
+        private readonly IStudyPlanService _studyPlanService;
 
-        public AiController(
-            IAiService aiService,
-            IChatHistoryRepository chatHistoryRepository)
+        public AiController(IStudyPlanService studyPlanService)
         {
-            _aiService = aiService;
-            _chatHistoryRepository = chatHistoryRepository;
+            _studyPlanService = studyPlanService;
         }
 
         [HttpPost("generate")]
@@ -30,40 +26,27 @@ namespace AiStudyPlanner.API.Controllers
                 return BadRequest("Input cannot be empty.");
 
             var userId = GetCurrentUserId();
-            
+
             if (userId == null)
                 return Unauthorized();
 
             try
             {
-                var result = await _aiService.GetStudyPlanAsync(request.Input);
+                var chat = await _studyPlanService.GenerateAndSaveAsync(userId.Value, request.Input);
 
-                var chat = new ChatHistory
+                return Ok(new GenerateStudyPlanResponse
                 {
-                    UserId = userId.Value,
-                    UserInput = request.Input,
-                    Tasks = result.Tasks,
-                    EstimatedTime = result.EstimatedTime,
-                    Priority = result.Priority,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _chatHistoryRepository.AddAsync(chat);
-                await _chatHistoryRepository.SaveChangesAsync();
-
-                return Ok(new
-                {
-                    chat.Id,
-                    result.Tasks,
-                    result.EstimatedTime,
-                    result.Priority,
-                    Progress = CalculateProgress(result.Tasks)
+                    Id = chat.Id,
+                    Tasks = MapTasks(chat.Tasks),
+                    EstimatedTime = chat.EstimatedTime,
+                    Priority = chat.Priority,
+                    Progress = CalculateProgress(chat.Tasks)
                 });
             }
             catch (Exception ex)
             {
                 if (ex.Message.Contains("AI service is busy"))
-                    return StatusCode(503, new { message = ex.Message});
+                    return StatusCode(503, new { message = ex.Message });
 
                 return StatusCode(500, new
                 {
@@ -76,28 +59,16 @@ namespace AiStudyPlanner.API.Controllers
         public async Task<IActionResult> GetHistoryById(int id)
         {
             var userId = GetCurrentUserId();
-            
+
             if (userId == null)
                 return Unauthorized();
 
-            var history = await _chatHistoryRepository.GetByIdAsync(id);
-            
+            var history = await _studyPlanService.GetHistoryByIdAsync(userId.Value, id);
+
             if (history == null)
                 return NotFound(new { message = "Chat history not found." });
 
-            if (history.UserId != userId.Value)
-                return Forbid();
-
-            return Ok(new
-            {
-                history.Id,
-                history.UserInput,
-                history.Tasks,
-                history.EstimatedTime,
-                history.Priority,
-                history.CreatedAt,
-                Progress = CalculateProgress(history.Tasks)
-            });
+            return Ok(MapChatHistory(history));
         }
 
         [HttpPatch("history/{historyId:int}/tasks/{taskIndex:int}/complete")]
@@ -108,28 +79,33 @@ namespace AiStudyPlanner.API.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            var chatHistory = await _chatHistoryRepository.GetByIdAsync(historyId);
-
-            if (chatHistory == null)
-                return NotFound(new { message = "Chat history not found." });
-
-            if (chatHistory.UserId != userId.Value)
-                return Forbid();
-
-            if (taskIndex < 0 || taskIndex >= chatHistory.Tasks.Count)
-                return BadRequest(new { message = "Invalid task index." });
-
-            chatHistory.Tasks[taskIndex].IsCompleted = true;
-
-            await _chatHistoryRepository.SaveChangesAsync();
-
-            return Ok(new
+            try
             {
-                message = "Task marked as completed.",
-                chatHistory.Id,
-                updatedTask = chatHistory.Tasks[taskIndex],
-                progress = CalculateProgress(chatHistory.Tasks)
-            });
+                var chatHistory = await _studyPlanService.CompleteTaskAsync(
+                    userId.Value,
+                    historyId,
+                    taskIndex
+                );
+
+                if (chatHistory == null)
+                    return NotFound(new { message = "Chat history not found." });
+
+                return Ok(new
+                {
+                    message = "Task marked as completed",
+                    chatHistory.Id,
+                    updatedTask = new TaskItemResponse
+                    {
+                        Title = chatHistory.Tasks[taskIndex].Title,
+                        IsCompleted = chatHistory.Tasks[taskIndex].IsCompleted
+                    },
+                    progress = CalculateProgress(chatHistory.Tasks)
+                });
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return BadRequest(new { message = "Invalid task index." });
+            }
         }
 
         [HttpPatch("history/{historyId:int}/tasks/{taskIndex:int}/incomplete")]
@@ -140,28 +116,33 @@ namespace AiStudyPlanner.API.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            var chatHistory = await _chatHistoryRepository.GetByIdAsync(historyId);
-
-            if (chatHistory == null)
-                return NotFound(new { message = "Chat history not found." });
-
-            if (chatHistory.UserId != userId.Value)
-                return Forbid();
-
-            if (taskIndex < 0 || taskIndex >= chatHistory.Tasks.Count)
-                return BadRequest(new { message = "Invalid task index." });
-
-            chatHistory.Tasks[taskIndex].IsCompleted = false;
-
-            await _chatHistoryRepository.SaveChangesAsync();
-
-            return Ok(new
+            try
             {
-                message = "Task marked as incomplete.",
-                chatHistory.Id,
-                updatedTask = chatHistory.Tasks[taskIndex],
-                progress = CalculateProgress(chatHistory.Tasks)
-            });
+                var chatHistory = await _studyPlanService.IncompleteTaskAsync(
+                    userId.Value,
+                    historyId,
+                    taskIndex
+                );
+
+                if (chatHistory == null)
+                    return NotFound(new { message = "Chat history not found." });
+
+                return Ok(new
+                {
+                    message = "Task marked as incomplete.",
+                    chatHistory.Id,
+                    updatedTask = new TaskItemResponse
+                    {
+                        Title = chatHistory.Tasks[taskIndex].Title,
+                        IsCompleted = chatHistory.Tasks[taskIndex].IsCompleted
+                    },
+                    progress = CalculateProgress(chatHistory.Tasks)
+                });
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return BadRequest(new { message = "Invalid task index." });
+            }
         }
 
         [HttpGet("history")]
@@ -172,9 +153,11 @@ namespace AiStudyPlanner.API.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            var history = await _chatHistoryRepository.GetByUserIdAsync(userId.Value);
+            var history = await _studyPlanService.GetHistoryAsync(userId.Value);
 
-            return Ok(history);
+            var response = history.Select(MapChatHistory).ToList();
+
+            return Ok(response);
         }
 
         private int? GetCurrentUserId()
@@ -190,27 +173,49 @@ namespace AiStudyPlanner.API.Controllers
             return userId;
         }
 
-        private static object CalculateProgress(List<TaskItem> tasks)
+        private static ProgressResponse CalculateProgress(List<TaskItem> tasks)
         {
             if (tasks.Count == 0)
             {
-                return new
+                return new ProgressResponse
                 {
-                    completedTasks = 0,
-                    totalTasks = 0,
-                    percentage = 0
+                    CompletedTasks = 0,
+                    TotalTasks = 0,
+                    Percentage = 0
                 };
             }
 
             int completed = tasks.Count(t => t.IsCompleted);
             int total = tasks.Count;
-            double percentage = Math.Round((double)completed / total * 100, 2);
 
-            return new
+            return new ProgressResponse
             {
-                completedTasks = completed,
-                totalTasks = total,
-                percentage
+                CompletedTasks = completed,
+                TotalTasks = total,
+                Percentage = (int)Math.Round((double)completed / total * 100)
+            };
+        }
+
+        private static List<TaskItemResponse> MapTasks(List<TaskItem> tasks)
+        {
+            return tasks.Select(t => new TaskItemResponse
+            {
+                Title = t.Title,
+                IsCompleted = t.IsCompleted
+            }).ToList();
+        }
+
+        private static ChatHistoryResponse MapChatHistory(ChatHistory history)
+        {
+            return new ChatHistoryResponse
+            {
+                Id = history.Id,
+                UserInput = history.UserInput,
+                Tasks = MapTasks(history.Tasks),
+                EstimatedTime = history.EstimatedTime,
+                Priority = history.Priority,
+                CreatedAt = history.CreatedAt,
+                Progress = CalculateProgress(history.Tasks)
             };
         }
     }

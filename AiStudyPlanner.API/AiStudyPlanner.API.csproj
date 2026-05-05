@@ -21,4 +21,8 @@
     <ProjectReference Include="..\AiStudyPlanner.Infrastructure\AiStudyPlanner.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Contracts\Auth\" />
+  </ItemGroup>
+
 </Project>
