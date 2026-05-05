@@ -1,4 +1,5 @@
 ﻿using AiStudyPlanner.API.Contracts.Ai;
+using AiStudyPlanner.API.Mappers;
 using AiStudyPlanner.Application.Services.Interfaces;
 using AiStudyPlanner.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -34,14 +35,7 @@ namespace AiStudyPlanner.API.Controllers
             {
                 var chat = await _studyPlanService.GenerateAndSaveAsync(userId.Value, request.Input);
 
-                return Ok(new GenerateStudyPlanResponse
-                {
-                    Id = chat.Id,
-                    Tasks = MapTasks(chat.Tasks),
-                    EstimatedTime = chat.EstimatedTime,
-                    Priority = chat.Priority,
-                    Progress = CalculateProgress(chat.Tasks)
-                });
+                return Ok(AiResponseMapper.ToGenerateStudyPlanResponse(chat));
             }
             catch (Exception ex)
             {
@@ -68,7 +62,7 @@ namespace AiStudyPlanner.API.Controllers
             if (history == null)
                 return NotFound(new { message = "Chat history not found." });
 
-            return Ok(MapChatHistory(history));
+            return Ok(AiResponseMapper.ToChatHistoryResponse(history));
         }
 
         [HttpPatch("history/{historyId:int}/tasks/{taskIndex:int}/complete")]
@@ -94,12 +88,8 @@ namespace AiStudyPlanner.API.Controllers
                 {
                     message = "Task marked as completed",
                     chatHistory.Id,
-                    updatedTask = new TaskItemResponse
-                    {
-                        Title = chatHistory.Tasks[taskIndex].Title,
-                        IsCompleted = chatHistory.Tasks[taskIndex].IsCompleted
-                    },
-                    progress = CalculateProgress(chatHistory.Tasks)
+                    updatedTask = AiResponseMapper.ToTaskItemResponse(chatHistory.Tasks[taskIndex]),
+                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
             catch (ArgumentOutOfRangeException)
@@ -131,12 +121,8 @@ namespace AiStudyPlanner.API.Controllers
                 {
                     message = "Task marked as incomplete.",
                     chatHistory.Id,
-                    updatedTask = new TaskItemResponse
-                    {
-                        Title = chatHistory.Tasks[taskIndex].Title,
-                        IsCompleted = chatHistory.Tasks[taskIndex].IsCompleted
-                    },
-                    progress = CalculateProgress(chatHistory.Tasks)
+                    updatedTask = AiResponseMapper.ToTaskItemResponse(chatHistory.Tasks[taskIndex]),
+                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
             catch (ArgumentOutOfRangeException)
@@ -155,7 +141,7 @@ namespace AiStudyPlanner.API.Controllers
 
             var history = await _studyPlanService.GetHistoryAsync(userId.Value);
 
-            var response = history.Select(MapChatHistory).ToList();
+            var response = history.Select(AiResponseMapper.ToChatHistoryResponse).ToList();
 
             return Ok(response);
         }
@@ -171,52 +157,6 @@ namespace AiStudyPlanner.API.Controllers
                 return null;
 
             return userId;
-        }
-
-        private static ProgressResponse CalculateProgress(List<TaskItem> tasks)
-        {
-            if (tasks.Count == 0)
-            {
-                return new ProgressResponse
-                {
-                    CompletedTasks = 0,
-                    TotalTasks = 0,
-                    Percentage = 0
-                };
-            }
-
-            int completed = tasks.Count(t => t.IsCompleted);
-            int total = tasks.Count;
-
-            return new ProgressResponse
-            {
-                CompletedTasks = completed,
-                TotalTasks = total,
-                Percentage = (int)Math.Round((double)completed / total * 100)
-            };
-        }
-
-        private static List<TaskItemResponse> MapTasks(List<TaskItem> tasks)
-        {
-            return tasks.Select(t => new TaskItemResponse
-            {
-                Title = t.Title,
-                IsCompleted = t.IsCompleted
-            }).ToList();
-        }
-
-        private static ChatHistoryResponse MapChatHistory(ChatHistory history)
-        {
-            return new ChatHistoryResponse
-            {
-                Id = history.Id,
-                UserInput = history.UserInput,
-                Tasks = MapTasks(history.Tasks),
-                EstimatedTime = history.EstimatedTime,
-                Priority = history.Priority,
-                CreatedAt = history.CreatedAt,
-                Progress = CalculateProgress(history.Tasks)
-            };
         }
     }
 }
