@@ -65,8 +65,8 @@ namespace AiStudyPlanner.API.Controllers
             return Ok(AiResponseMapper.ToChatHistoryResponse(history));
         }
 
-        [HttpPatch("history/{historyId:int}/tasks/{taskIndex:int}/complete")]
-        public async Task<IActionResult> CompleteTask(int historyId, int taskIndex)
+        [HttpPatch("history/{historyId:int}/tasks/{taskId:guid}/complete")]
+        public async Task<IActionResult> CompleteTask(int historyId, Guid taskId)
         {
             var userId = GetCurrentUserId();
 
@@ -78,28 +78,30 @@ namespace AiStudyPlanner.API.Controllers
                 var chatHistory = await _studyPlanService.CompleteTaskAsync(
                     userId.Value,
                     historyId,
-                    taskIndex
+                    taskId
                 );
 
                 if (chatHistory == null)
                     return NotFound(new { message = "Chat history not found." });
 
+                var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
+
                 return Ok(new
                 {
                     message = "Task marked as completed",
                     chatHistory.Id,
-                    updatedTask = AiResponseMapper.ToTaskItemResponse(chatHistory.Tasks[taskIndex]),
+                    updatedTask = AiResponseMapper.ToTaskItemResponse(updatedTask),
                     progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
-            catch (ArgumentOutOfRangeException)
+            catch (KeyNotFoundException)
             {
-                return BadRequest(new { message = "Invalid task index." });
+                return NotFound(new { message = "Task not found." });
             }
         }
 
-        [HttpPatch("history/{historyId:int}/tasks/{taskIndex:int}/incomplete")]
-        public async Task<IActionResult> IncompleteTask(int historyId, int taskIndex)
+        [HttpPatch("history/{historyId:int}/tasks/{taskId:guid}/incomplete")]
+        public async Task<IActionResult> IncompleteTask(int historyId, Guid taskId)
         {
             var userId = GetCurrentUserId();
 
@@ -111,23 +113,25 @@ namespace AiStudyPlanner.API.Controllers
                 var chatHistory = await _studyPlanService.IncompleteTaskAsync(
                     userId.Value,
                     historyId,
-                    taskIndex
+                    taskId
                 );
 
                 if (chatHistory == null)
                     return NotFound(new { message = "Chat history not found." });
 
+                var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
+
                 return Ok(new
                 {
                     message = "Task marked as incomplete.",
                     chatHistory.Id,
-                    updatedTask = AiResponseMapper.ToTaskItemResponse(chatHistory.Tasks[taskIndex]),
+                    updatedTask = AiResponseMapper.ToTaskItemResponse(updatedTask),
                     progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
-            catch (ArgumentOutOfRangeException)
+            catch (KeyNotFoundException)
             {
-                return BadRequest(new { message = "Invalid task index." });
+                return NotFound(new { message = "Task not found." });
             }
         }
 

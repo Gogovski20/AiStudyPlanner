@@ -52,34 +52,38 @@ namespace AiStudyPlanner.Application.Services.Implementations
             return history;
         }
 
-        public async Task<ChatHistory?> CompleteTaskAsync(int userId, int historyId, int taskIndex)
+        public async Task<ChatHistory?> CompleteTaskAsync(int userId, int historyId, Guid taskId)
         {
             var history = await _chatHistoryRepository.GetByIdAsync(historyId);
 
             if (history == null || history.UserId != userId)
                 return null;
 
-            if (taskIndex < 0 || taskIndex >= history.Tasks.Count)
-                throw new ArgumentOutOfRangeException(nameof(taskIndex), "Invalid task index.");
+            var task = history.Tasks.FirstOrDefault(t => t.Id == taskId);
 
-            history.Tasks[taskIndex].IsCompleted = true;
+            if (task == null)
+                throw new KeyNotFoundException("Task not found.");
+
+            task.IsCompleted = true;
 
             await _chatHistoryRepository.SaveChangesAsync();
 
             return history;
         }
 
-        public async Task<ChatHistory?> IncompleteTaskAsync(int userId, int historyId, int taskIndex)
+        public async Task<ChatHistory?> IncompleteTaskAsync(int userId, int historyId, Guid taskId)
         {
             var history = await _chatHistoryRepository.GetByIdAsync(historyId);
 
             if (history == null || history.UserId != userId)
                 return null;
 
-            if (taskIndex < 0 || taskIndex >= history.Tasks.Count)
-                throw new ArgumentOutOfRangeException(nameof(taskIndex), "Invalid task index.");
+            var task = history.Tasks.FirstOrDefault(t => t.Id == taskId);
 
-            history.Tasks[taskIndex].IsCompleted = false;
+            if (task == null)
+                throw new KeyNotFoundException("Task not found.");
+
+            task.IsCompleted = false;
 
             await _chatHistoryRepository.SaveChangesAsync();
 
