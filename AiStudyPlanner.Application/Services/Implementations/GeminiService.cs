@@ -12,16 +12,59 @@ namespace AiStudyPlanner.Application.Services.Implementations
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
         private readonly string _baseUrl;
+        private readonly bool _useMockAi;
 
         public GeminiService(HttpClient httpClient, IConfiguration config)
         {
             _httpClient = httpClient;
-            _apiKey = config["Gemini:ApiKey"] ?? throw new ArgumentNullException("API Key missing");
-            _baseUrl = config["Gemini:BaseUrl"] ?? throw new ArgumentNullException("Base URL missing");
+            _useMockAi = config.GetValue<bool>("AiSettings:UseMockAi");
+
+            if (!_useMockAi) 
+            {
+                _apiKey = config["Gemini:ApiKey"] ?? throw new ArgumentNullException("API Key missing");
+                _baseUrl = config["Gemini:BaseUrl"] ?? throw new ArgumentNullException("Base URL missing");
+            }
+            else
+            {
+                _apiKey = string.Empty;
+                _baseUrl = string.Empty;
+            }
+
+            Console.WriteLine($"DEBUG - UseMockAi: {_useMockAi}");
         }
 
         public async Task<AiResponse> GetStudyPlanAsync(string userInput)
         {
+            if (_useMockAi)
+            {
+                return new AiResponse
+                {
+                    Tasks = new List<TaskItem>
+                    {
+                        new TaskItem
+                        {
+                            Id = Guid.NewGuid(),
+                            Title = "Review core backend concepts",
+                            IsCompleted = false
+                        },
+                        new TaskItem
+                        {
+                            Id = Guid.NewGuid(),
+                            Title = "Practice common interview questions",
+                            IsCompleted = false
+                        },
+                        new TaskItem
+                        {
+                            Id = Guid.NewGuid(),
+                            Title = "Build one small coding exercise",
+                            IsCompleted = false
+                        }
+                    },
+                    EstimatedTime = "3 days",
+                    Priority = "High"
+                };
+            }
+
             var url = $"{_baseUrl}?key={_apiKey}";
 
             var prompt = $@"
