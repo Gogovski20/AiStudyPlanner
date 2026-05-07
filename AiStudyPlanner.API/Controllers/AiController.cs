@@ -21,7 +21,7 @@ namespace AiStudyPlanner.API.Controllers
         }
 
         [HttpPost("generate")]
-        public async Task<IActionResult> Generate([FromBody] AiRequest request)
+        public async Task<IActionResult> Generate([FromBody] GenerateStudyPlanRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Input))
                 return BadRequest("Input cannot be empty.");
