@@ -150,6 +150,49 @@ namespace AiStudyPlanner.API.Controllers
             return Ok(response);
         }
 
+        [HttpPatch("history/{historyId:int}/tasks/{taskId:guid}/title")]
+        public async Task<IActionResult> UpdateTaskTitle(
+            int historyId,
+            Guid taskId,
+            [FromBody] UpdateTaskTitleRequest request)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            try
+            {
+                var chatHistory = await _studyPlanService.UpdateTaskTitleAsync(
+                    userId.Value,
+                    historyId,
+                    taskId,
+                    request.Title
+                );
+
+                if (chatHistory == null)
+                    return NotFound(new { message = "Chat history not found." });
+
+                var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
+
+                return Ok(new
+                {
+                    message = "Task title updated.",
+                    chatHistory.Id,
+                    updatedTask = AiResponseMapper.ToTaskItemResponse(updatedTask),
+                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Task not found." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         private int? GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
