@@ -111,5 +111,24 @@ namespace AiStudyPlanner.Application.Services.Implementations
 
             return history;
         }
+
+        public async Task<ChatHistory?> DeleteTaskAsync(int userId, int historyId, Guid taskId)
+        {
+            var history = await _chatHistoryRepository.GetByIdAsync(historyId);
+
+            if (history == null || history.UserId != userId)
+                return null;
+
+            var task = history.Tasks.FirstOrDefault(t => t.Id == taskId);
+
+            if (task == null)
+                throw new KeyNotFoundException("Task not found.");
+
+            history.Tasks.Remove(task);
+
+            await _chatHistoryRepository.SaveChangesAsync();
+
+            return history;
+        }
     }
 }
