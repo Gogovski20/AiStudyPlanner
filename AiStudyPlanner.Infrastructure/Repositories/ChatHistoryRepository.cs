@@ -19,6 +19,11 @@ namespace AiStudyPlanner.Infrastructure.Repositories
             await _context.ChatHistories.AddAsync(chat);
         }
 
+        public void Delete(ChatHistory chatHistory)
+        {
+            _context.ChatHistories.Remove(chatHistory);
+        }
+
         public async Task<ChatHistory?> GetByIdAsync(int id)
         {
             return await _context.ChatHistories.FirstOrDefaultAsync(c => c.Id == id);

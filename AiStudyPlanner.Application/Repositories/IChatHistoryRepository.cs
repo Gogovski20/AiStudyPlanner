@@ -8,5 +8,6 @@ namespace AiStudyPlanner.Application.Repositories
         Task<ChatHistory?> GetByIdAsync(int id);
         Task<IEnumerable<ChatHistory>> GetByUserIdAsync(int userId);
         Task SaveChangesAsync();
+        void Delete(ChatHistory chatHistory);
     }
 }
