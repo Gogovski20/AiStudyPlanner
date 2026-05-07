@@ -89,5 +89,27 @@ namespace AiStudyPlanner.Application.Services.Implementations
 
             return history;
         }
+
+        public async Task<ChatHistory?> UpdateTaskTitleAsync(int userId, int historyId, Guid taskId, string newTitle)
+        {
+            var history = await _chatHistoryRepository.GetByIdAsync(historyId);
+
+            if (history == null || history.UserId != userId)
+                return null;
+
+            var task = history.Tasks.FirstOrDefault(t => t.Id == taskId);
+
+            if (task == null)
+                throw new KeyNotFoundException("Task not found.");
+
+            if (string.IsNullOrWhiteSpace(newTitle))
+                throw new ArgumentException("Task title cannot be empty.", nameof(newTitle));
+
+            task.Title = newTitle.Trim();
+
+            await _chatHistoryRepository.SaveChangesAsync();
+
+            return history;
+        }
     }
 }

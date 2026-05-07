@@ -9,5 +9,11 @@ namespace AiStudyPlanner.Application.Services.Interfaces
         Task<ChatHistory?> GetHistoryByIdAsync(int userId, int historyId);
         Task<ChatHistory?> CompleteTaskAsync(int userId, int historyId, Guid taskId);
         Task<ChatHistory?> IncompleteTaskAsync(int userId, int historyId, Guid taskId);
+        Task<ChatHistory?> UpdateTaskTitleAsync(
+            int userId,
+            int historyId,
+            Guid taskId,
+            string newTitle
+        );
     }
 }
