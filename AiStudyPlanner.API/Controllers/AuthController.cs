@@ -1,4 +1,5 @@
-﻿using AiStudyPlanner.Application.Services.Interfaces;
+﻿using AiStudyPlanner.API.Contracts.Auth;
+using AiStudyPlanner.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,8 +39,19 @@ namespace AiStudyPlanner.API.Controllers
         {
             try
             {
-                var token = await _authService.LoginAsync(request.Email, request.Password);
-                return Ok(new { token });
+                var result = await _authService.LoginAsync(request.Email, request.Password);
+
+                return Ok(new LoginResponse
+                {
+                    Token = result.Token,
+                    User = new AuthUserResponse
+                    {
+                        Id = result.User.Id,
+                        Username = result.User.UserName,
+                        Email = result.User.Email,
+                        Role = result.User.Role,
+                    }
+                });
             }
             catch (UnauthorizedAccessException ex)
             {

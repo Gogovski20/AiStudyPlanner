@@ -1,4 +1,5 @@
-﻿using AiStudyPlanner.Application.Repositories;
+﻿using AiStudyPlanner.Application.Models;
+using AiStudyPlanner.Application.Repositories;
 using AiStudyPlanner.Application.Services.Interfaces;
 using AiStudyPlanner.Domain.Models;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +21,7 @@ namespace AiStudyPlanner.Application.Services.Implementations
             _configuration = configuration;
         }
 
-        public async Task<string> LoginAsync(string email, string password)
+        public async Task<AuthResult> LoginAsync(string email, string password)
         {
             var user = await _userRepository.GetByEmailAsync(email);
 
@@ -29,7 +30,11 @@ namespace AiStudyPlanner.Application.Services.Implementations
                 throw new UnauthorizedAccessException("Invalid email or password.");
             }
 
-            return GenerateToken(user);
+            return new AuthResult
+            {
+                Token = GenerateToken(user),
+                User = user
+            };
         }
 
         public async Task RegisterAsync(string username, string email, string password)
