@@ -225,6 +225,43 @@ namespace AiStudyPlanner.API.Controllers
             }
         }
 
+        [HttpPost("history/{historyId:int}/tasks")]
+        public async Task<IActionResult> AddTask(
+            int historyId,
+            [FromBody] AddTaskRequest request)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            try
+            {
+                var chatHistory = await _studyPlanService.AddTaskAsync(
+                    userId.Value,
+                    historyId,
+                    request.Title
+                );
+
+                if (chatHistory == null)
+                    return NotFound(new { message = "Chat history not found." });
+
+                var addedTask = chatHistory.Tasks.Last();
+
+                return Ok(new
+                {
+                    message = "Task added.",
+                    chatHistory.Id,
+                    addedTask = AiResponseMapper.ToTaskItemResponse(addedTask),
+                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         private int? GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

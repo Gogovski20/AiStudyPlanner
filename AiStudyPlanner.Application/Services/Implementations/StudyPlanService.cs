@@ -130,5 +130,29 @@ namespace AiStudyPlanner.Application.Services.Implementations
 
             return history;
         }
+
+        public async Task<ChatHistory?> AddTaskAsync(int userId, int historyId, string title)
+        {
+            var history = await _chatHistoryRepository.GetByIdAsync(historyId);
+
+            if (history == null || history.UserId != userId)
+                return null;
+
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException("Task title cannot be empty.", nameof(title));
+
+            var task = new TaskItem
+            {
+                Id = Guid.NewGuid(),
+                Title = title.Trim(),
+                IsCompleted = false
+            };
+
+            history.Tasks.Add(task);
+
+            await _chatHistoryRepository.SaveChangesAsync();
+
+            return history;
+        }
     }
 }
