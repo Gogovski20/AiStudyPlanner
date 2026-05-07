@@ -1,7 +1,9 @@
 ﻿using AiStudyPlanner.API.Contracts.Auth;
 using AiStudyPlanner.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AiStudyPlanner.API.Controllers
 {
@@ -57,6 +59,27 @@ namespace AiStudyPlanner.API.Controllers
             {
                 return Unauthorized(ex.Message);
             }
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var username = User.FindFirst(ClaimTypes.Name)?.Value;
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out int userId))
+                return Unauthorized();
+
+            return Ok(new AuthUserResponse
+            {
+                Id = userId,
+                Username = username ?? string.Empty,
+                Email = email ?? string.Empty,
+                Role = role ?? "User"
+            });
         }
 
         public record RegisterRequest(string Username,string Email, string Password);
