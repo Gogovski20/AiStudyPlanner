@@ -193,6 +193,38 @@ namespace AiStudyPlanner.API.Controllers
             }
         }
 
+        [HttpDelete("history/{historyId:int}/tasks/{taskId:guid}")]
+        public async Task<IActionResult> DeleteTask(int historyId, Guid taskId)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            try
+            {
+                var chatHistory = await _studyPlanService.DeleteTaskAsync(
+                    userId.Value,
+                    historyId,
+                    taskId
+                );
+
+                if (chatHistory == null)
+                    return NotFound(new { message = "Chat history not found." });
+
+                return Ok(new
+                {
+                    message = "Task deleted.",
+                    chatHistory.Id,
+                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Task not found." });
+            }
+        }
+
         private int? GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
