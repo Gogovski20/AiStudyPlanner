@@ -17,5 +17,6 @@ namespace AiStudyPlanner.Application.Services.Interfaces
         );
         Task<ChatHistory?> DeleteTaskAsync(int userId, int historyId, Guid taskId);
         Task<ChatHistory?> AddTaskAsync(int userId, int historyId, string title);
+        Task<bool> DeleteHistoryAsync(int userId, int historyId);
     }
 }

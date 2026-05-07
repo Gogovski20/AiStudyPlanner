@@ -154,5 +154,18 @@ namespace AiStudyPlanner.Application.Services.Implementations
 
             return history;
         }
+
+        public async Task<bool> DeleteHistoryAsync(int userId, int historyId)
+        {
+            var history = await _chatHistoryRepository.GetByIdAsync(historyId);
+
+            if (history == null || history.UserId != userId)
+                return false;
+
+            _chatHistoryRepository.Delete(history);
+            await _chatHistoryRepository.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

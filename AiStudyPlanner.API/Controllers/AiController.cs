@@ -262,6 +262,25 @@ namespace AiStudyPlanner.API.Controllers
             }
         }
 
+        [HttpDelete("history/{historyId:int}")]
+        public async Task<IActionResult> DeleteHistory(int historyId)
+        {
+            var userId = GetCurrentUserId();
+
+            if (userId == null)
+                return Unauthorized();
+
+            var deleted = await _studyPlanService.DeleteHistoryAsync(
+                userId.Value,
+                historyId
+            );
+
+            if (!deleted)
+                return NotFound(new { message = "Chat history not found." });
+
+            return Ok(new { message = "Study plan deleted." });
+        }
+
         private int? GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
