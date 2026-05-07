@@ -86,12 +86,12 @@ namespace AiStudyPlanner.API.Controllers
 
                 var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
 
-                return Ok(new
+                return Ok(new TaskActionResponse
                 {
-                    message = "Task marked as completed",
-                    chatHistory.Id,
-                    updatedTask = AiResponseMapper.ToTaskItemResponse(updatedTask),
-                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                    Message = "Task marked as completed.",
+                    ChatHistoryId = chatHistory.Id,
+                    Task = AiResponseMapper.ToTaskItemResponse(updatedTask),
+                    Progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
             catch (KeyNotFoundException)
@@ -121,12 +121,12 @@ namespace AiStudyPlanner.API.Controllers
 
                 var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
 
-                return Ok(new
+                return Ok(new TaskActionResponse
                 {
-                    message = "Task marked as incomplete.",
-                    chatHistory.Id,
-                    updatedTask = AiResponseMapper.ToTaskItemResponse(updatedTask),
-                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                    Message = "Task marked as incomplete.",
+                    ChatHistoryId = chatHistory.Id,
+                    Task = AiResponseMapper.ToTaskItemResponse(updatedTask),
+                    Progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
             catch (KeyNotFoundException)
@@ -175,12 +175,12 @@ namespace AiStudyPlanner.API.Controllers
 
                 var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
 
-                return Ok(new
+                return Ok(new TaskActionResponse
                 {
-                    message = "Task title updated.",
-                    chatHistory.Id,
-                    updatedTask = AiResponseMapper.ToTaskItemResponse(updatedTask),
-                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                    Message = "Task title updated.",
+                    ChatHistoryId = chatHistory.Id,
+                    Task = AiResponseMapper.ToTaskItemResponse(updatedTask),
+                    Progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
             catch (KeyNotFoundException)
@@ -212,11 +212,12 @@ namespace AiStudyPlanner.API.Controllers
                 if (chatHistory == null)
                     return NotFound(new { message = "Chat history not found." });
 
-                return Ok(new
+                return Ok(new TaskActionResponse
                 {
-                    message = "Task deleted.",
-                    chatHistory.Id,
-                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                    Message = "Task deleted.",
+                    ChatHistoryId = chatHistory.Id,
+                    Task = null,
+                    Progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
             catch (KeyNotFoundException)
@@ -248,12 +249,12 @@ namespace AiStudyPlanner.API.Controllers
 
                 var addedTask = chatHistory.Tasks.Last();
 
-                return Ok(new
+                return Ok(new TaskActionResponse
                 {
-                    message = "Task added.",
-                    chatHistory.Id,
-                    addedTask = AiResponseMapper.ToTaskItemResponse(addedTask),
-                    progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
+                    Message = "Task added.",
+                    ChatHistoryId = chatHistory.Id,
+                    Task = AiResponseMapper.ToTaskItemResponse(addedTask),
+                    Progress = AiResponseMapper.CalculateProgress(chatHistory.Tasks)
                 });
             }
             catch (ArgumentException ex)
