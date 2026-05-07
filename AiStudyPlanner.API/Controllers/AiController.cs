@@ -1,7 +1,7 @@
 ﻿using AiStudyPlanner.API.Contracts.Ai;
+using AiStudyPlanner.API.Contracts.Common;
 using AiStudyPlanner.API.Mappers;
 using AiStudyPlanner.Application.Services.Interfaces;
-using AiStudyPlanner.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -24,7 +24,7 @@ namespace AiStudyPlanner.API.Controllers
         public async Task<IActionResult> Generate([FromBody] GenerateStudyPlanRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Input))
-                return BadRequest("Input cannot be empty.");
+                return BadRequest(new ErrorResponse { Message = "Input cannot be empty." });
 
             var userId = GetCurrentUserId();
 
@@ -40,11 +40,11 @@ namespace AiStudyPlanner.API.Controllers
             catch (Exception ex)
             {
                 if (ex.Message.Contains("AI service is busy"))
-                    return StatusCode(503, new { message = ex.Message });
+                    return StatusCode(503, new ErrorResponse { Message = ex.Message });
 
-                return StatusCode(500, new
+                return StatusCode(500, new ErrorResponse
                 {
-                    message = "Something went wrong while generating the study plan."
+                    Message = "Something went wrong while generating the study plan."
                 });
             }
         }
@@ -60,7 +60,7 @@ namespace AiStudyPlanner.API.Controllers
             var history = await _studyPlanService.GetHistoryByIdAsync(userId.Value, id);
 
             if (history == null)
-                return NotFound(new { message = "Chat history not found." });
+                return NotFound(new ErrorResponse { Message = "Chat history not found." });
 
             return Ok(AiResponseMapper.ToChatHistoryResponse(history));
         }
@@ -82,7 +82,7 @@ namespace AiStudyPlanner.API.Controllers
                 );
 
                 if (chatHistory == null)
-                    return NotFound(new { message = "Chat history not found." });
+                    return NotFound(new ErrorResponse { Message = "Chat history not found." });
 
                 var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
 
@@ -96,7 +96,7 @@ namespace AiStudyPlanner.API.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new { message = "Task not found." });
+                return NotFound(new ErrorResponse { Message = "Task not found." });
             }
         }
 
@@ -117,7 +117,7 @@ namespace AiStudyPlanner.API.Controllers
                 );
 
                 if (chatHistory == null)
-                    return NotFound(new { message = "Chat history not found." });
+                    return NotFound(new ErrorResponse { Message = "Chat history not found." });
 
                 var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
 
@@ -131,7 +131,7 @@ namespace AiStudyPlanner.API.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new { message = "Task not found." });
+                return NotFound(new ErrorResponse { Message = "Task not found." });
             }
         }
 
@@ -171,7 +171,7 @@ namespace AiStudyPlanner.API.Controllers
                 );
 
                 if (chatHistory == null)
-                    return NotFound(new { message = "Chat history not found." });
+                    return NotFound(new ErrorResponse { Message = "Chat history not found." });
 
                 var updatedTask = chatHistory.Tasks.First(t => t.Id == taskId);
 
@@ -185,11 +185,11 @@ namespace AiStudyPlanner.API.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new { message = "Task not found." });
+                return NotFound(new ErrorResponse { Message = "Task not found." });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new ErrorResponse { Message = ex.Message });
             }
         }
 
@@ -210,7 +210,7 @@ namespace AiStudyPlanner.API.Controllers
                 );
 
                 if (chatHistory == null)
-                    return NotFound(new { message = "Chat history not found." });
+                    return NotFound(new ErrorResponse { Message = "Chat history not found." });
 
                 return Ok(new TaskActionResponse
                 {
@@ -222,7 +222,7 @@ namespace AiStudyPlanner.API.Controllers
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new { message = "Task not found." });
+                return NotFound(new ErrorResponse { Message = "Task not found." });
             }
         }
 
@@ -245,7 +245,7 @@ namespace AiStudyPlanner.API.Controllers
                 );
 
                 if (chatHistory == null)
-                    return NotFound(new { message = "Chat history not found." });
+                    return NotFound(new ErrorResponse { Message = "Chat history not found." });
 
                 var addedTask = chatHistory.Tasks.Last();
 
@@ -259,7 +259,7 @@ namespace AiStudyPlanner.API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new ErrorResponse { Message = ex.Message });
             }
         }
 
@@ -277,7 +277,7 @@ namespace AiStudyPlanner.API.Controllers
             );
 
             if (!deleted)
-                return NotFound(new { message = "Chat history not found." });
+                return NotFound(new ErrorResponse { Message = "Chat history not found." });
 
             return Ok(new { message = "Study plan deleted." });
         }
