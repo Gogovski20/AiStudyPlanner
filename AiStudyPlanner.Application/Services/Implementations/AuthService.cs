@@ -1,4 +1,5 @@
-﻿using AiStudyPlanner.Application.Models;
+﻿using AiStudyPlanner.Application.Common;
+using AiStudyPlanner.Application.Models;
 using AiStudyPlanner.Application.Repositories;
 using AiStudyPlanner.Application.Services.Interfaces;
 using AiStudyPlanner.Domain.Models;
@@ -23,6 +24,8 @@ namespace AiStudyPlanner.Application.Services.Implementations
 
         public async Task<AuthResult> LoginAsync(string email, string password)
         {
+            email = email.Trim().ToLower();
+
             var user = await _userRepository.GetByEmailAsync(email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
@@ -39,6 +42,21 @@ namespace AiStudyPlanner.Application.Services.Implementations
 
         public async Task RegisterAsync(string username, string email, string password)
         {
+            username = username.Trim();
+            email = email.Trim().ToLower();
+
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Username is required.");
+
+            if (username.Length < 3)
+                throw new ArgumentException("Username must be at least 3 characters long.");
+
+            if (!EmailValidator.IsValid(email))
+                throw new ArgumentException("Invalid email format.");
+
+            if (!PasswordValidator.IsValid(password))
+                throw new ArgumentException(PasswordValidator.GetRequirementsMessage());
+
             if (await _userRepository.ExistsAsync(email))
             {
                 throw new InvalidOperationException("User with this email already exists.");

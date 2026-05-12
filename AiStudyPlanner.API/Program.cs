@@ -1,9 +1,11 @@
+using AiStudyPlanner.API.Contracts.Common;
 using AiStudyPlanner.Application.Repositories;
 using AiStudyPlanner.Application.Services.Implementations;
 using AiStudyPlanner.Application.Services.Interfaces;
 using AiStudyPlanner.Infrastructure.Persistence;
 using AiStudyPlanner.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -11,7 +13,27 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .SelectMany(x => x.Value!.Errors)
+                .Select(x => x.ErrorMessage)
+                .ToList();
+
+            var message = errors.Count > 0
+                ? string.Join(" ", errors)
+                : "Invalid request.";
+
+            return new BadRequestObjectResult(new ErrorResponse
+            {
+                Message = message
+            });
+        };
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
