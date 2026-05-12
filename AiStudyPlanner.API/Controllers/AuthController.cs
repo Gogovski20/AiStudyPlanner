@@ -1,7 +1,7 @@
 ﻿using AiStudyPlanner.API.Contracts.Auth;
+using AiStudyPlanner.API.Contracts.Common;
 using AiStudyPlanner.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -33,6 +33,10 @@ namespace AiStudyPlanner.API.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ErrorResponse { Message = ex.Message });
             }
         }
 
@@ -81,8 +85,5 @@ namespace AiStudyPlanner.API.Controllers
                 Role = role ?? "User"
             });
         }
-
-        public record RegisterRequest(string Username,string Email, string Password);
-        public record LoginRequest(string Email, string Password);
     }
 }
