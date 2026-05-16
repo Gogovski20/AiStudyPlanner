@@ -1,6 +1,7 @@
 ﻿using AiStudyPlanner.API.Contracts.Ai;
 using AiStudyPlanner.API.Contracts.Common;
 using AiStudyPlanner.API.Mappers;
+using AiStudyPlanner.Application.Exceptions;
 using AiStudyPlanner.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,10 @@ namespace AiStudyPlanner.API.Controllers
                 var chat = await _studyPlanService.GenerateAndSaveAsync(userId.Value, request.Input);
 
                 return Ok(AiResponseMapper.ToGenerateStudyPlanResponse(chat));
+            }
+            catch (OffTopicRequestException ex)
+            {
+                return BadRequest(new ErrorResponse { Message = ex.Message });
             }
             catch (Exception ex)
             {

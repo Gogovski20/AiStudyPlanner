@@ -1,4 +1,5 @@
-﻿using AiStudyPlanner.Application.Services.Interfaces;
+﻿using AiStudyPlanner.Application.Exceptions;
+using AiStudyPlanner.Application.Services.Interfaces;
 using AiStudyPlanner.Domain.Models;
 using Microsoft.Extensions.Configuration;
 using System.Net;
@@ -68,12 +69,24 @@ namespace AiStudyPlanner.Application.Services.Implementations
             var url = $"{_baseUrl}?key={_apiKey}";
 
             var prompt = $@"
-                You are a professional study planner.
+                You are a professional study and interview preparation planner.
+                Your ONLY job is to help users with:
+                - Study plans
+                - Interview preparation
+                - Learning roadmaps
+                - Skill development for technical or academic topics
 
                 User request:
                 {userInput}
 
-                Respond ONLY with valid JSON in this exact format:
+                IMPORTANT: If the user request is NOT related to studying, learning, or interview preparation,
+                respond ONLY with this exact JSON and nothing else:
+
+                {{
+                  ""error"": ""off_topic""
+                }}
+
+                Otherwise, respond ONLY with valid JSON in this exact format:
 
                 {{
                   ""tasks"": [
@@ -169,6 +182,13 @@ namespace AiStudyPlanner.Application.Services.Implementations
                 {
                     cleanedJson = cleanedJson.Substring(firstLineEnd).Replace("```", "").Trim();
                 }
+            }
+
+            using var checkDoc = JsonDocument.Parse(cleanedJson);
+            if (checkDoc.RootElement.TryGetProperty("error", out var errorProp) &&
+                errorProp.GetString() == "off_topic")
+            {
+                throw new OffTopicRequestException();
             }
 
             // 🔐 SAFE DESERIALIZATION
