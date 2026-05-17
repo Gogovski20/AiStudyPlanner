@@ -88,7 +88,7 @@ const RegisterPage = () => {
               type="text"
               value={form.username}
               onChange={handleChange}
-              placeholder="vladimir"
+              placeholder="johny123"
               className="w-full rounded-lg border px-4 py-3 outline-none focus:border-blue-500"
             />
           </div>
