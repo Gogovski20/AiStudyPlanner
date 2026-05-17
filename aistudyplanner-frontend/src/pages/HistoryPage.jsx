@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getHistory } from "../api/studyPlanApi";
+import PageContainer from "../components/PageContainer";
+import ErrorMessage from "../components/ErrorMessage";
+import LoadingMessage from "../components/LoadingMessage";
 
 const HistoryPage = () => {
   const [history, setHistory] = useState([]);
@@ -28,14 +31,14 @@ const HistoryPage = () => {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <p className="text-gray-600">Loading history...</p>
-      </main>
+      <PageContainer>
+        <LoadingMessage message="Loading history..." />
+      </PageContainer>
     );
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
+    <PageContainer>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
           Study History
@@ -45,21 +48,21 @@ const HistoryPage = () => {
         </p>
       </div>
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+      <ErrorMessage message={error} />
 
       {history.length === 0 ? (
         <div className="rounded-2xl bg-white p-8 text-center shadow">
-          <p className="text-gray-600">No study plans yet.</p>
-
+          <h2 className="text-xl font-semibold text-gray-900">
+            No study plans yet
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Generate your first study plan and it will appear here.
+          </p>
           <Link
             to="/dashboard"
-            className="mt-4 inline-block rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700"
+            className="mt-5 inline-block rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700"
           >
-            Generate your first plan
+            Generate Plan
           </Link>
         </div>
       ) : (
@@ -87,7 +90,7 @@ const HistoryPage = () => {
           ))}
         </div>
       )}
-    </main>
+    </PageContainer>
   );
 };
 

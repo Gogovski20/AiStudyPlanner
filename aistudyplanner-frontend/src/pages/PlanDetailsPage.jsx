@@ -9,6 +9,11 @@ import {
   incompleteTask,
   updateTaskTitle,
 } from "../api/studyPlanApi";
+import PageContainer from "../components/PageContainer";
+import ErrorMessage from "../components/ErrorMessage";
+import LoadingMessage from "../components/LoadingMessage";
+import ProgressBar from "../components/ProgressBar";
+import PrimaryButton from "../components/PrimaryButton";
 
 const PlanDetailsPage = () => {
   const { id } = useParams();
@@ -20,6 +25,7 @@ const PlanDetailsPage = () => {
   const [editingTitle, setEditingTitle] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const loadPlan = async () => {
     try {
@@ -42,7 +48,7 @@ const PlanDetailsPage = () => {
 
   const handleToggleTask = async (task) => {
     setError("");
-
+    setActionLoading(true);
     try {
       if (task.isCompleted) {
         await incompleteTask(id, task.id);
@@ -57,12 +63,14 @@ const PlanDetailsPage = () => {
           err.response?.data?.Message ||
           "Failed to update task."
       );
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleDeleteTask = async (taskId) => {
     setError("");
-
+    setActionLoading(true);
     try {
       await deleteTask(id, taskId);
       await loadPlan();
@@ -72,6 +80,8 @@ const PlanDetailsPage = () => {
           err.response?.data?.Message ||
           "Failed to delete task."
       );
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -83,7 +93,7 @@ const PlanDetailsPage = () => {
       setError("Task title cannot be empty.");
       return;
     }
-
+    setActionLoading(true);
     try {
       await addTask(id, newTaskTitle);
       setNewTaskTitle("");
@@ -94,6 +104,8 @@ const PlanDetailsPage = () => {
           err.response?.data?.Message ||
           "Failed to add task."
       );
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -114,7 +126,7 @@ const PlanDetailsPage = () => {
       setError("Task title cannot be empty.");
       return;
     }
-
+    setActionLoading(true);
     try {
       await updateTaskTitle(id, taskId, editingTitle);
       setEditingTaskId(null);
@@ -126,6 +138,8 @@ const PlanDetailsPage = () => {
           err.response?.data?.Message ||
           "Failed to update task title."
       );
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -152,9 +166,9 @@ const PlanDetailsPage = () => {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <p className="text-gray-600">Loading study plan...</p>
-      </main>
+      <PageContainer>
+        <LoadingMessage message="Loading study plan..." />
+      </PageContainer>
     );
   }
 
@@ -199,18 +213,9 @@ const PlanDetailsPage = () => {
         </button>
       </div>
 
-      <div className="mb-6 h-3 overflow-hidden rounded-full bg-gray-200">
-        <div
-          className="h-3 rounded-full bg-blue-600"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      <ProgressBar percentage={progress} />
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+      <ErrorMessage message={error} />
 
       <section className="rounded-2xl bg-white p-6 shadow">
         <h2 className="mb-4 text-xl font-bold text-gray-900">
@@ -218,6 +223,11 @@ const PlanDetailsPage = () => {
         </h2>
 
         <div className="space-y-3">
+          {plan.tasks?.length === 0 && (
+            <div className="rounded-lg border border-dashed p-6 text-center text-gray-600">
+              No tasks available. Add a custom task below.
+            </div>
+          )}
           {plan.tasks?.map((task) => (
             <div
               key={task.id}
@@ -227,6 +237,7 @@ const PlanDetailsPage = () => {
                 <input
                   type="checkbox"
                   checked={task.isCompleted}
+                  disabled={actionLoading}
                   onChange={() => handleToggleTask(task)}
                   className="h-5 w-5"
                 />
@@ -253,15 +264,13 @@ const PlanDetailsPage = () => {
               <div className="flex gap-2">
                 {editingTaskId === task.id ? (
                   <>
-                    <button
-                      onClick={() => handleSaveTitle(task.id)}
-                      className="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-                    >
+                    <PrimaryButton onClick={() => handleSaveTitle(task.id)} className="px-3 py-2 text-sm" disabled={actionLoading}>
                       Save
-                    </button>
+                    </PrimaryButton>
 
                     <button
                       onClick={cancelEditing}
+                      disabled={actionLoading}
                       className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
                     >
                       Cancel
@@ -270,6 +279,7 @@ const PlanDetailsPage = () => {
                 ) : (
                   <button
                     onClick={() => startEditing(task)}
+                    disabled={actionLoading}
                     className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
                   >
                     Edit
@@ -278,6 +288,7 @@ const PlanDetailsPage = () => {
 
                 <button
                   onClick={() => handleDeleteTask(task.id)}
+                  disabled={actionLoading}
                   className="rounded-lg border px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
                   Delete
@@ -295,9 +306,9 @@ const PlanDetailsPage = () => {
             className="flex-1 rounded-lg border px-4 py-3 outline-none focus:border-blue-500"
           />
 
-          <button className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700">
+          <PrimaryButton type="submit" disabled={actionLoading}>
             Add Task
-          </button>
+          </PrimaryButton>
         </form>
       </section>
     </main>
