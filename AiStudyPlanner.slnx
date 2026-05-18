@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="AiStudyPlanner.API/AiStudyPlanner.API.csproj" />
   <Project Path="AiStudyPlanner.Application/AiStudyPlanner.Application.csproj" Id="574d1ba5-e73a-48e4-96a7-0d8dc14ea776" />
   <Project Path="AiStudyPlanner.Domain/AiStudyPlanner.Domain.csproj" Id="21bde492-298c-412f-b50c-af6acab613e7" />
