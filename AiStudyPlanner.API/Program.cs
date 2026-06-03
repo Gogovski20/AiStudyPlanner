@@ -87,7 +87,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "https://aistudyplanner.vercel.app"
+                "https://ai-study-planner-peach-one.vercel.app"
               )
               .AllowAnyHeader()
               .AllowAnyMethod();
