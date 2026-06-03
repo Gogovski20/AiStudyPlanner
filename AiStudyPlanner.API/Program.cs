@@ -87,9 +87,9 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "https://ai-study-planner-peach-one.vercel.app",
-                "https://ai-study-planner-dj9nql8um-vladimirs-projects1.vercel.app"
+                "https://ai-study-planner-peach-one.vercel.app"
               )
+              .SetIsOriginAllowedToAllowWildcardSubdomains()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -102,11 +102,11 @@ var app = builder.Build();
 //    app.UseSwagger();
 //    app.UseSwaggerUI();
 //}
+
+app.UseCors("FrontendPolicy");
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.UseHttpsRedirection();
-app.UseCors("FrontendPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
